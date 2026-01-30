@@ -37,10 +37,12 @@ export default function Dashboard() {
       setLoading(false);
     } catch (error) {
       console.error('Failed to fetch dashboard data:', error);
-      if (error.response?.status === 401) {
-        window.location.href = '/login';
+      const status = error.response?.status;
+      if (status === 401 || status === 403) {
+        setErrorMessage('Your session expired or is invalid. Please log in again.');
+      } else {
+        setErrorMessage('Unable to load dashboard data. Check the backend URL or try again.');
       }
-      setErrorMessage('Unable to load dashboard data. Check the backend URL or try again.');
       setLoading(false);
     }
   };
@@ -66,6 +68,15 @@ export default function Dashboard() {
             className="mt-4 lux-button px-6 py-3 rounded-lg font-semibold"
           >
             Retry
+          </button>
+          <button
+            onClick={() => {
+              localStorage.removeItem('auth_token');
+              window.location.href = '/login';
+            }}
+            className="mt-3 px-6 py-3 border border-[#c9a961]/30 rounded-lg text-sm text-[#f5f1e8] hover:border-[#c9a961] transition-colors"
+          >
+            Reset Login
           </button>
         </div>
       </Layout>
