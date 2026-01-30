@@ -19,6 +19,7 @@ export default function AssessmentPortal() {
   const [notes, setNotes] = useState('');
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
+  const isDemo = token === 'demo';
 
   const nextPhase = useMemo(() => {
     if (!assessment) return 1;
@@ -30,7 +31,7 @@ export default function AssessmentPortal() {
   }, [assessment]);
 
   const fetchAssessment = async () => {
-    if (!token) return;
+    if (!token || isDemo) return;
     try {
       const response = await axios.get(`${API_URL}/assess/${token}`);
       setAssessment(response.data);
@@ -40,11 +41,25 @@ export default function AssessmentPortal() {
   };
 
   useEffect(() => {
+    if (isDemo) {
+      setStatus('');
+      setAssessment({
+        client_first_name: 'Demo Client',
+        phase1_complete: false,
+        phase2_complete: false,
+        phase3_complete: false,
+        phase4_complete: false
+      });
+      return;
+    }
     fetchAssessment();
-  }, [token]);
+  }, [token, isDemo]);
 
   const handleSubmit = async () => {
-    if (!token) return;
+    if (!token || isDemo) {
+      setStatus('Demo mode only. This response is not saved.');
+      return;
+    }
     setLoading(true);
     setStatus('');
     try {
@@ -118,7 +133,7 @@ export default function AssessmentPortal() {
                     disabled={loading || notes.trim().length === 0}
                     className="mt-4 lux-button px-6 py-3 rounded-lg font-semibold disabled:opacity-60"
                   >
-                    {loading ? 'Submitting...' : 'Submit Phase'}
+                    {isDemo ? 'Demo Only' : loading ? 'Submitting...' : 'Submit Phase'}
                   </button>
                 </>
               )}
