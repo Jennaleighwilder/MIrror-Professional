@@ -36,10 +36,14 @@ export default function Login() {
     setCreatingDemo(true);
 
     try {
+      if (!email || !password) {
+        setError('Enter an email and password first.');
+        return;
+      }
       const response = await axios.post(`${API_URL}/auth/register`, {
         company_name: 'Demo Matchmakers',
-        email: 'demo@elitematch.com',
-        password: 'demo123',
+        email,
+        password,
         tier: 'platinum'
       });
 
@@ -50,8 +54,8 @@ export default function Login() {
       if (message.toLowerCase().includes('already')) {
         try {
           const loginResponse = await axios.post(`${API_URL}/auth/login`, {
-            email: 'demo@elitematch.com',
-            password: 'demo123'
+            email,
+            password
           });
           localStorage.setItem('auth_token', loginResponse.data.token);
           window.location.href = '/dashboard';
@@ -127,7 +131,7 @@ export default function Login() {
             {creatingDemo ? 'Creating demo account...' : 'Create Demo Account'}
           </button>
           <div className="mt-6 text-xs text-[#d8d3c8]">
-            Demo access: <span className="text-[#c9a961]">demo@elitematch.com / demo123</span>
+            Use your email + password, then click Create Demo Account.
           </div>
         </div>
       </div>
