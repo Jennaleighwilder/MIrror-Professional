@@ -13,6 +13,7 @@ export default function Dashboard() {
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showInviteModal, setShowInviteModal] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
 
   useEffect(() => {
     fetchDashboardData();
@@ -39,6 +40,8 @@ export default function Dashboard() {
       if (error.response?.status === 401) {
         window.location.href = '/login';
       }
+      setErrorMessage('Unable to load dashboard data. Check the backend URL or try again.');
+      setLoading(false);
     }
   };
 
@@ -52,6 +55,22 @@ export default function Dashboard() {
     );
   }
 
+  if (errorMessage) {
+    return (
+      <Layout title="Dashboard">
+        <div className="lux-panel p-6 rounded-2xl">
+          <h2 className="text-xl font-serif text-[#f5f1e8] mb-2">Dashboard unavailable</h2>
+          <p className="text-[#d8d3c8]">{errorMessage}</p>
+          <button
+            onClick={fetchDashboardData}
+            className="mt-4 lux-button px-6 py-3 rounded-lg font-semibold"
+          >
+            Retry
+          </button>
+        </div>
+      </Layout>
+    );
+  }
   return (
     <Layout title="Dashboard">
       <section className="lux-panel p-8 mb-10 rounded-2xl">
