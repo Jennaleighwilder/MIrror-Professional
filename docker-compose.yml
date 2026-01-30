@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14-alpine
+    container_name: mirror_pro_db
+    environment:
+      POSTGRES_USER: mirror
+      POSTGRES_PASSWORD: mirrorpass
+      POSTGRES_DB: mirror_pro
+    ports:
+      - "5432:5432"
+    volumes:
+      - mirror_pro_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    container_name: mirror_pro_backend
+    environment:
+      PORT: 3000
+      NODE_ENV: production
+      DATABASE_URL: postgresql://mirror:mirrorpass@db:5432/mirror_pro
+      JWT_SECRET: change_this_to_random_32_plus_chars
+      SMTP_HOST: smtp.sendgrid.net
+      SMTP_USER: apikey
+      SMTP_PASS: your_sendgrid_api_key
+      FROM_EMAIL: noreply@yourcompany.com
+      APP_URL: http://localhost:3001
+    ports:
+      - "3000:3000"
+    depends_on:
+      - db
+
+  frontend:
+    build: ./frontend
+    container_name: mirror_pro_frontend
+    environment:
+      NEXT_PUBLIC_API_URL: http://localhost:3000/api
+    ports:
+      - "3001:3001"
+    depends_on:
+      - backend
+
+volumes:
+  mirror_pro_data:
