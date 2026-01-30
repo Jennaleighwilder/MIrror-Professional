@@ -8,6 +8,7 @@ export default function Login() {
   const [email, setEmail] = useState('demo@elitematch.com');
   const [password, setPassword] = useState('demo123');
   const [loading, setLoading] = useState(false);
+  const [creatingDemo, setCreatingDemo] = useState(false);
   const [error, setError] = useState('');
 
   const handleSubmit = async (event) => {
@@ -27,6 +28,42 @@ export default function Login() {
       setError(err.response?.data?.error || 'Login failed. Check credentials.');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleCreateDemo = async () => {
+    setError('');
+    setCreatingDemo(true);
+
+    try {
+      const response = await axios.post(`${API_URL}/auth/register`, {
+        company_name: 'Demo Matchmakers',
+        email: 'demo@elitematch.com',
+        password: 'demo123',
+        tier: 'platinum'
+      });
+
+      localStorage.setItem('auth_token', response.data.token);
+      window.location.href = '/dashboard';
+    } catch (err) {
+      const message = err.response?.data?.error || 'Unable to create demo account.';
+      if (message.toLowerCase().includes('already')) {
+        try {
+          const loginResponse = await axios.post(`${API_URL}/auth/login`, {
+            email: 'demo@elitematch.com',
+            password: 'demo123'
+          });
+          localStorage.setItem('auth_token', loginResponse.data.token);
+          window.location.href = '/dashboard';
+          return;
+        } catch (loginError) {
+          setError(loginError.response?.data?.error || 'Login failed. Check credentials.');
+        }
+      } else {
+        setError(message);
+      }
+    } finally {
+      setCreatingDemo(false);
     }
   };
 
@@ -81,6 +118,14 @@ export default function Login() {
               {loading ? 'Signing in...' : 'Sign In'}
             </button>
           </form>
+          <button
+            type="button"
+            onClick={handleCreateDemo}
+            disabled={creatingDemo}
+            className="w-full mt-3 px-4 py-3 border border-[#c9a961]/30 rounded-lg text-sm text-[#f5f1e8] hover:border-[#c9a961] transition-colors disabled:opacity-60"
+          >
+            {creatingDemo ? 'Creating demo account...' : 'Create Demo Account'}
+          </button>
           <div className="mt-6 text-xs text-[#d8d3c8]">
             Demo access: <span className="text-[#c9a961]">demo@elitematch.com / demo123</span>
           </div>
