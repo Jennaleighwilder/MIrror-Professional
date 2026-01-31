@@ -701,7 +701,6 @@ export default function AssessmentPortal() {
   const [responses, setResponses] = useState({});
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('');
-  const isDemo = token === 'demo';
 
   const nextPhase = useMemo(() => {
     if (!assessment) return 1;
@@ -713,7 +712,7 @@ export default function AssessmentPortal() {
   }, [assessment]);
 
   const fetchAssessment = async () => {
-    if (!token || isDemo) return;
+    if (!token) return;
     try {
       const response = await axios.get(`${API_URL}/assess/${token}`);
       setAssessment(response.data);
@@ -723,19 +722,8 @@ export default function AssessmentPortal() {
   };
 
   useEffect(() => {
-    if (isDemo) {
-      setStatus('');
-      setAssessment({
-        client_first_name: 'Demo Client',
-        phase1_complete: false,
-        phase2_complete: false,
-        phase3_complete: false,
-        phase4_complete: false
-      });
-      return;
-    }
     fetchAssessment();
-  }, [token, isDemo]);
+  }, [token]);
 
   useEffect(() => {
     if (!assessment) return;
@@ -934,8 +922,8 @@ export default function AssessmentPortal() {
   };
 
   const handleSubmit = async () => {
-    if (!token || isDemo) {
-      setStatus('Demo mode only. This response is not saved.');
+    if (!token) {
+      setStatus('Missing assessment link.');
       return;
     }
     if (!isPhaseComplete) {
@@ -1017,7 +1005,7 @@ export default function AssessmentPortal() {
                     disabled={loading || !isPhaseComplete}
                     className="mt-4 lux-button px-6 py-3 rounded-lg font-semibold disabled:opacity-60"
                   >
-                    {isDemo ? 'Demo Only' : loading ? 'Submitting...' : 'Submit Phase'}
+                    {loading ? 'Submitting...' : 'Submit Phase'}
                   </button>
                 </>
               )}
