@@ -477,8 +477,16 @@ function calculateValueAlignment(mirrorA, mirrorB) {
 
   const frequencyAlignment = stringSimilarity(freqA, freqB);
 
+  const dyadIntakeScore = calculateDyadIntakeAlignment(mirrorA, mirrorB);
+  if (dyadIntakeScore === null) {
+    return Math.round(
+      (contractSimilarity * 0.5 + frequencyAlignment * 0.5) * 100
+    );
+  }
+
+  const dyadRatio = dyadIntakeScore / 100;
   return Math.round(
-    (contractSimilarity * 0.5 + frequencyAlignment * 0.5) * 100
+    (contractSimilarity * 0.3 + frequencyAlignment * 0.3 + dyadRatio * 0.4) * 100
   );
 }
 
@@ -553,6 +561,49 @@ function stringSimilarity(str1, str2) {
   const total = new Set([...words1, ...words2]).size;
 
   return total === 0 ? 0 : common / total;
+}
+
+function calculateDyadIntakeAlignment(mirrorA = {}, mirrorB = {}) {
+  const geoA = mirrorA.geo || {};
+  const geoB = mirrorB.geo || {};
+  const tempoA = mirrorA.tempo || {};
+  const tempoB = mirrorB.tempo || {};
+  const dyadA = mirrorA.dyad || {};
+  const dyadB = mirrorB.dyad || {};
+
+  const availabilityScore = overlapScore(geoA.availability_blocks, geoB.availability_blocks);
+  const nonnegotiablesScore = overlapScore(geoA.nonnegotiables, geoB.nonnegotiables);
+  const initiationScore = overlapScore(tempoA.initiation_grammar, tempoB.initiation_grammar);
+  const roleLockScore = overlapScore(dyadA.role_locks, dyadB.role_locks);
+  const intimacyScore = intimacyAlignmentScore(tempoA.intimacy_freq, tempoB.intimacy_freq);
+
+  const scores = [availabilityScore, nonnegotiablesScore, initiationScore, roleLockScore, intimacyScore]
+    .filter((value) => Number.isFinite(value));
+
+  if (scores.length === 0) return null;
+
+  const total = scores.reduce((sum, value) => sum + value, 0);
+  return Math.round(total / scores.length);
+}
+
+function overlapScore(listA, listB) {
+  const a = Array.isArray(listA) ? listA : [];
+  const b = Array.isArray(listB) ? listB : [];
+  if (a.length === 0 || b.length === 0) return null;
+  const intersection = a.filter((item) => b.includes(item)).length;
+  const union = new Set([...a, ...b]).size;
+  if (union === 0) return null;
+  return Math.round((intersection / union) * 100);
+}
+
+function intimacyAlignmentScore(freqA, freqB) {
+  if (!freqA || !freqB) return null;
+  const order = ['none', 'monthly', 'weekly', '2-3x_week', 'daily'];
+  const indexA = order.indexOf(freqA);
+  const indexB = order.indexOf(freqB);
+  if (indexA === -1 || indexB === -1) return null;
+  const diff = Math.abs(indexA - indexB);
+  return Math.max(0, 100 - diff * 20);
 }
 
 function calculateDistance(lat1, lng1, lat2, lng2) {
